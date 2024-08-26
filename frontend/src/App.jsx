@@ -10,6 +10,16 @@ const LiveFace = () => {
   const [chunks, setChunks] = useState([]);
   const [countdown, setCountdown] = useState(0);
   const [countdownInterval, setCountdownInterval] = useState(null);
+
+  const [fadeComplete, setFadeComplete] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFadeComplete(true);
+    }, 3000); // Match the duration of the fadeOut animation (6 seconds)
+
+    return () => clearTimeout(timer);
+  }, []);
   
 
   const promptVideos = {
@@ -27,7 +37,7 @@ const LiveFace = () => {
     "Touch your right ear with your left hand.": "/videos/rightearlefthand.mp4",
     "Touch your left ear with your right hand.": "/videos/leftearrighthand.mp4",
     "Shake your head from side to side slowly.": "/videos/headshake.mp4",
-    "Wave your right hand.": "/videos/rigthandwave.mp4",
+    "Wave your right hand.": "/videos/righthandwave.mp4",
     "Wave your left hand.": "/videos/lefthandwave.mp4",
     "Wink slowly with your left eye.": "/videos/lefteyewink.mp4",
     "Wink slowly with your right eye.": "/videos/righteyewink.mp4",
@@ -99,12 +109,16 @@ const LiveFace = () => {
   ];
 
   useEffect(() => {
+    if (!fadeComplete) return; // Exit early if fade is not complete
+
     const getUserMedia = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
         });
-        videoRef.current.srcObject = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
         mediaRecorderRef.current = new MediaRecorder(stream, {
           mimeType: "video/webm",
         });
@@ -126,7 +140,7 @@ const LiveFace = () => {
     };
 
     getUserMedia();
-  }, []);
+  }, [fadeComplete]);
 
   const getRandomPrompt = () => {
     const shuffled = [...livenessPrompts].sort(() => 0.5 - Math.random());
@@ -189,35 +203,40 @@ const LiveFace = () => {
   };
 
   return (
-    
     <div id="root">
-      <h1>LiveFace</h1>
-      <div className="liveface-container">
-        <div className="recording-section">
-          <video ref={videoRef} autoPlay playsInline />
-          <div>
-            <p>{currentPrompt}</p>
-            {countdown > 0 && (
-              <p>Time remaining for current prompt: {countdown}s</p>
+      {!fadeComplete && (
+        <div id="fade-out-div" className="fade-out">LiveFace</div>
+      )}
+      {fadeComplete && (
+        <>
+          <h1>LiveFace</h1>
+          <div className="liveface-container">
+            <div className="recording-section">
+              <video ref={videoRef} autoPlay playsInline />
+              <div>
+                <p>{currentPrompt}</p>
+                {countdown > 0 && (
+                  <p>Time remaining for current prompt: {countdown}s</p>
+                )}
+              </div>
+              <button onClick={recording ? handleStopRecording : handleStartRecording}>
+                {recording ? "Stop Recording" : "Start Recording"}
+              </button>
+            </div>
+            {currentPrompt && (
+              <div className="prompt-video-section">
+                <video
+                  src={promptVideos[currentPrompt]}
+                  autoPlay
+                  loop
+                  muted
+                />
+                <p className="instruction-text">Please perform a similar movement</p>
+              </div>
             )}
-            
           </div>
-          <button onClick={recording ? handleStopRecording : handleStartRecording}>
-            {recording ? "Stop Recording" : "Start Recording"}
-          </button>
-        </div>
-        {currentPrompt && (
-          <div className="prompt-video-section">
-            <video
-              src={promptVideos[currentPrompt]}
-              autoPlay
-              loop
-              muted
-            />
-            <p className="instruction-text">Please perform a similar movement</p>
-          </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };
