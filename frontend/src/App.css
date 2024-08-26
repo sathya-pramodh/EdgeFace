@@ -3,33 +3,94 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  font-family: 'Roboto', sans-serif; /* Modern font */
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: beige;
+  margin-bottom: 1.5rem;
 }
 
 .liveface-container {
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Align items at the top */
-  gap: 20px; /* Space between recording and prompt video */
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap; /* Allow wrapping for smaller screens */
 }
 
 .recording-section {
   flex: 1;
   min-width: 300px;
   max-width: 600px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.recording-section:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .prompt-video-section {
   flex: 0 0 300px;
   max-width: 300px;
   border: 2px solid #ddd;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  background: #fff;
 }
 
 video {
   width: 100%;
   height: auto;
-  border-radius: 10px;
+  border-radius: 12px;
+}
+
+.instruction-text {
+  font-size: 1rem;
+  color: #666;
+  margin-top: 0.5rem;
+  font-weight: 500;
+  line-height: 1.4; /* Improve readability */
+}
+
+button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin-top: 1rem;
+}
+
+button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05); /* Slightly enlarge button on hover */
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+}
+
+p {
+  font-size: 1rem;
+  color: #555;
+  margin: 0.5rem 0;
+}
+
+@media (max-width: 768px) {
+  .liveface-container {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
