@@ -1,4 +1,4 @@
-DEPS=flask flask_cors
+DEPS=flask flask_cors mtcnn tensorflow
 run:
 	python3 main.py
 

@@ -1,8 +1,9 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS, cross_origin
 
 from utils.hand_gesture import generate_hand_gesture
 from utils.head_gesture import generate_head_gesture
+from utils.model import video_to_model_output
 
 app = Flask(__file__)
 CORS(app)
@@ -55,6 +56,13 @@ def get_head_gesture_prompt():
     gesture = generate_head_gesture()
     return jsonify({"gesture": gesture})
 
+### Function to upload the video and get model output
+@app.route('/api/upload-video', methods=["POST"])
+def upload_video():
+    
+    ### TODO: Get the Video Stream from the frontend ###
+    
+    return jsonify({"confidence scores"})
 
 if __name__ == "__main__":
     app.run()
