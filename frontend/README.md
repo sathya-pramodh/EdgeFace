@@ -1,15 +1,5 @@
 # Live Face Detection - Frontend
 
-**Live Face Detection** is a React-based web application for face-liveness verification. This project involves recording video using the webcam and verifying user liveness through action prompts.
-
-## Features
-
-- **Webcam Integration**: Captures video from the user's webcam.
-- **Action Prompts**: Provides random action prompts to verify liveness.
-- **Countdown Timer**: Displays countdowns for each action prompt.
-- **Recording Control**: Allows starting and stopping video recording.
-- **Backend Interaction**: Sends recorded video to a backend server for processing.
-
 ## Getting Started
 
 ### Prerequisites
@@ -50,15 +40,3 @@
 ## Notes
 
 - Ensure your browser has permission to access the webcam.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
-## Acknowledgments
-
-- Special thanks to [React](https://reactjs.org/) and [Vite](https://vitejs.dev/) for their tools.
-
----
-
-Make sure to replace `https://github.com/yourusername/live-face.git` with your actual repository URL. Adjust any other details as needed based on your specific setup.
