@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import axios from "axios";
+import "./App.css"
 
 const LiveFace = () => {
   const videoRef = useRef(null);
@@ -11,47 +12,30 @@ const LiveFace = () => {
   const [countdownInterval, setCountdownInterval] = useState(null);
   const [totalCountdown, setTotalCountdown] = useState(0); // Total countdown time
 
+  const promptVideos = {
+    // "Raise your eyebrows as if surprised.": "/videos/eyebrowraise.mp4",
+    // "Smile widely.":"/videos/widesmile.mp4",
+    // "Frown and then relax your face.":"/videos/frown.mp4",
+    // "Close your eyes for two seconds and then open them.":"/videos/2eyeclose.mp4",
+    // "Turn your head to the left.":"/videos/headleft.mp4",
+    // "Turn your head to the right.":"/videos/headright.mp4",
+    // "Tilt your head up to look at the ceiling.":"/videos/headup.mp4",
+    // "Tilt your head down to look at the floor.":"/videos/headdown.mp4",
+     "Open your mouth wide and close it.":"/videos/mouthopen.mp4",
+    //"Touch your nose with your right hand.":"/videos/rightnosetouch.mp4",
+    // Add other mappings here
+  };
   const livenessPrompts = [
-    "Raise your eyebrows as if surprised.",
-    "Turn your head to the left.",
-    "Turn your head to the right.",
-    "Smile widely.",
-    "Frown and then relax your face.",
-    "Close your eyes for two seconds and then open them.",
+    // "Raise your eyebrows as if surprised.",
+    // "Smile widely.",
+    // "Frown and then relax your face.",
+    // "Close your eyes for two seconds and then open them.",
+    // "Turn your head to the left.",
+    // "Turn your head to the right.",
+    // "Tilt your head up to look at the ceiling.",
+    // "Tilt your head down to look at the floor.",
     "Open your mouth wide and close it.",
-    "Tilt your head up to look at the ceiling.",
-    "Tilt your head down to look at the floor.",
-    "Touch your nose with your right hand.",
-    "Touch your nose with your left hand.",
-    "Pinch your fingers together slowly.",
-    "Wave your right hand.",
-    "Wave your left hand.",
-    "Nod your head up and down slowly.",
-    "Shake your head from side to side slowly.",
-    "Wink slowly with your left eye.",
-    "Wink slowly with your right eye.",
-    "Touch your right ear with your left hand.",
-    "Touch your left ear with your right hand.",
-    "Clap your hands twice gently.",
-    "Place your right hand on top of your head.",
-    "Place your left hand on top of your head.",
-    "Raise your right hand as if to ask a question.",
-    "Raise your left hand as if to ask a question.",
-    "Cover your mouth with your right hand for a moment.",
-    "Cover your mouth with your left hand for a moment.",
-    "Touch your chin with your right hand.",
-    "Touch your chin with your left hand.",
-    "Scratch your head gently with your right hand.",
-    "Scratch your head gently with your left hand.",
-    "Place both hands on your cheeks and hold for two seconds.",
-    "Point to the left with your right hand.",
-    "Point to the right with your left hand.",
-    "Place your right hand on your chest.",
-    "Place your left hand on your chest.",
-    "Raise both hands above your head.",
-    "Lower both hands to your sides.",
-    "Put your right hand on your shoulder.",
-    "Put your left hand on your shoulder.",
+    //"Touch your nose with your right hand.",
   ];
 
   useEffect(() => {
@@ -169,20 +153,36 @@ const LiveFace = () => {
   };
 
   return (
-    <div>
+    <div id="root">
       <h1>LiveFace</h1>
-      <video ref={videoRef} autoPlay playsInline />
-      <div>
-        <p>{currentPrompt}</p>
-        {countdown > 0 && (
-          <p>Time remaining for current prompt: {countdown}s</p>
+      <div className="liveface-container">
+        <div className="recording-section">
+          <video ref={videoRef} autoPlay playsInline />
+          <div>
+            <p>{currentPrompt}</p>
+            {countdown > 0 && (
+              <p>Time remaining for current prompt: {countdown}s</p>
+            )}
+          </div>
+          <button onClick={recording ? handleStopRecording : handleStartRecording}>
+            {recording ? "Stop Recording" : "Start Recording"}
+          </button>
+        </div>
+        {currentPrompt && (
+          <div className="prompt-video-section">
+            <video
+              src={promptVideos[currentPrompt]}
+              autoPlay
+              loop
+              muted
+              
+            />
+          </div>
         )}
       </div>
-      <button onClick={recording ? handleStopRecording : handleStartRecording}>
-        {recording ? "Stop Recording" : "Start Recording"}
-      </button>
     </div>
   );
+  
 };
 
 export default LiveFace;

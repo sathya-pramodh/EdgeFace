@@ -4,3 +4,32 @@
   padding: 2rem;
   text-align: center;
 }
+
+.liveface-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Align items at the top */
+  gap: 20px; /* Space between recording and prompt video */
+}
+
+.recording-section {
+  flex: 1;
+  min-width: 300px;
+  max-width: 600px;
+}
+
+.prompt-video-section {
+  flex: 0 0 300px;
+  max-width: 300px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+}
+
+video {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
