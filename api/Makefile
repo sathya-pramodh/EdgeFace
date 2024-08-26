@@ -1,4 +1,4 @@
-DEPS=flask
+DEPS=flask flask_cors
 run:
 	python3 main.py
 

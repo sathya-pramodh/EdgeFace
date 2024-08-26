@@ -11,48 +11,48 @@ const LiveFace = () => {
     const [countdownInterval, setCountdownInterval] = useState(null);
     const [totalCountdown, setTotalCountdown] = useState(0); // Total countdown time
 
-    const livenessPrompts = [
-        "Raise your eyebrows as if surprised.",
-        "Turn your head to the left.",
-        "Turn your head to the right.",
-        "Smile widely.",
-        "Frown and then relax your face.",
-        "Close your eyes for two seconds and then open them.",
-        "Open your mouth wide and close it.",
-        "Tilt your head up to look at the ceiling.",
-        "Tilt your head down to look at the floor.",
-        "Touch your nose with your right hand.",
-        "Touch your nose with your left hand.",
-        "Pinch your fingers together slowly.",
-        "Wave your right hand.",
-        "Wave your left hand.",
-        "Nod your head up and down slowly.",
-        "Shake your head from side to side slowly.",
-        "Wink slowly with your left eye.",
-        "Wink slowly with your right eye.",
-        "Touch your right ear with your left hand.",
-        "Touch your left ear with your right hand.",
-        "Clap your hands twice gently.",
-        "Place your right hand on top of your head.",
-        "Place your left hand on top of your head.",
-        "Raise your right hand as if to ask a question.",
-        "Raise your left hand as if to ask a question.",
-        "Cover your mouth with your right hand for a moment.",
-        "Cover your mouth with your left hand for a moment.",
-        "Touch your chin with your right hand.",
-        "Touch your chin with your left hand.",
-        "Scratch your head gently with your right hand.",
-        "Scratch your head gently with your left hand.",
-        "Place both hands on your cheeks and hold for two seconds.",
-        "Point to the left with your right hand.",
-        "Point to the right with your left hand.",
-        "Place your right hand on your chest.",
-        "Place your left hand on your chest.",
-        "Raise both hands above your head.",
-        "Lower both hands to your sides.",
-        "Put your right hand on your shoulder.",
-        "Put your left hand on your shoulder.",
-    ];
+    // const livenessPrompts = [
+    //     "Raise your eyebrows as if surprised.",
+    //     "Turn your head to the left.",
+    //     "Turn your head to the right.",
+    //     "Smile widely.",
+    //     "Frown and then relax your face.",
+    //     "Close your eyes for two seconds and then open them.",
+    //     "Open your mouth wide and close it.",
+    //     "Tilt your head up to look at the ceiling.",
+    //     "Tilt your head down to look at the floor.",
+    //     "Touch your nose with your right hand.",
+    //     "Touch your nose with your left hand.",
+    //     "Pinch your fingers together slowly.",
+    //     "Wave your right hand.",
+    //     "Wave your left hand.",
+    //     "Nod your head up and down slowly.",
+    //     "Shake your head from side to side slowly.",
+    //     "Wink slowly with your left eye.",
+    //     "Wink slowly with your right eye.",
+    //     "Touch your right ear with your left hand.",
+    //     "Touch your left ear with your right hand.",
+    //     "Clap your hands twice gently.",
+    //     "Place your right hand on top of your head.",
+    //     "Place your left hand on top of your head.",
+    //     "Raise your right hand as if to ask a question.",
+    //     "Raise your left hand as if to ask a question.",
+    //     "Cover your mouth with your right hand for a moment.",
+    //     "Cover your mouth with your left hand for a moment.",
+    //     "Touch your chin with your right hand.",
+    //     "Touch your chin with your left hand.",
+    //     "Scratch your head gently with your right hand.",
+    //     "Scratch your head gently with your left hand.",
+    //     "Place both hands on your cheeks and hold for two seconds.",
+    //     "Point to the left with your right hand.",
+    //     "Point to the right with your left hand.",
+    //     "Place your right hand on your chest.",
+    //     "Place your left hand on your chest.",
+    //     "Raise both hands above your head.",
+    //     "Lower both hands to your sides.",
+    //     "Put your right hand on your shoulder.",
+    //     "Put your left hand on your shoulder.",
+    // ];
 
     useEffect(() => {
         const getUserMedia = async () => {
@@ -84,9 +84,11 @@ const LiveFace = () => {
         getUserMedia();
     }, [chunks]);
 
-    const getRandomPrompts = () => {
-        const shuffled = [...livenessPrompts].sort(() => 0.5 - Math.random());
-        return [shuffled[0], shuffled[1]];
+    const getRandomPrompts = async () => {
+        
+        const handGesturePrompt = (await axios.get("http://localhost:5000/api/get-hand-gesture-prompt")).data.gesture;
+        const headGesturePrompt = (await axios.get("http://localhost:5000/api/get-head-gesture-prompt")).data.gesture;
+        return [handGesturePrompt, headGesturePrompt];
     };
 
     const startCountdown = (seconds) => {
@@ -127,7 +129,7 @@ const LiveFace = () => {
         setRecording(true);
         mediaRecorderRef.current.start();
 
-        const [prompt1, prompt2] = getRandomPrompts();
+        const [prompt1, prompt2] = await getRandomPrompts();
 
         // Display the first prompt immediately
         setCurrentPrompt(prompt1);
