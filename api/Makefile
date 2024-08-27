@@ -1,4 +1,4 @@
-DEPS=flask flask_cors
+DEPS=flask flask_cors opencv-python
 run:
 	python3 main.py
 
