@@ -8,7 +8,6 @@ const LiveFace = () => {
     const mediaRecorderRef = useRef(null);
     const [currentPrompt, setCurrentPrompt] = useState("");
     const [recording, setRecording] = useState(false);
-    const [chunks, setChunks] = useState([]);
     const [countdown, setCountdown] = useState(0);
     const [countdownInterval, setCountdownInterval] = useState(null);
     const [totalCountdown, setTotalCountdown] = useState(0);
@@ -78,24 +77,32 @@ const LiveFace = () => {
                     mimeType: "video/webm",
                 });
 
-                mediaRecorderRef.current.ondataavailable = (event) => {
+                mediaRecorderRef.current.ondataavailable = async (event) => {
                     if (event.data.size > 0) {
-                        setChunks((prevChunks) => [...prevChunks, event.data]);
+                        const blob = new Blob([event.data], { type: "video/webm" });
+                        const imgs = await sendVideoToBackend(blob);
+                        await getModelInference(imgs);
                     }
-                };
-
-                mediaRecorderRef.current.onstop = async () => {
-                    const blob = new Blob(chunks, { type: "video/webm" });
-                    await sendVideoToBackend(blob);
-                    setChunks([]);
-                    await getModelInference();
                 };
             } catch (error) {
                 console.error("Error accessing media devices.", error);
             }
         };
+
+        const getModelInference = async (imgs) => {
+            console.log("Data is being processed");
+
+            const mobilenet = await import('@tensorflow-models/mobilenet');
+            const model = await mobilenet.load();
+
+            const predictionPromises = imgs.map(img => model.classify(img));
+            const predictions = await Promise.all(predictionPromises);
+
+            console.log('Predictions:');
+            console.log(predictions);
+        };
         getUserMedia();
-    }, [chunks, fadeComplete])
+    }, [fadeComplete])
 
     const getRandomPrompts = async () => {
         const handGesturePrompt = (await axios.get("http://localhost:5000/api/get-hand-gesture-prompt")).data.gesture;
@@ -137,102 +144,77 @@ const LiveFace = () => {
 
 
     const handleStartRecording = async () => {
-      console.log("Starting recording...");
-      setRecording(true);
-  
-      // Ensure mediaRecorderRef.current is initialized
-      if (mediaRecorderRef.current) {
-          mediaRecorderRef.current.start();
-  
-          try {
-              const [prompt1, prompt2] = await getRandomPrompts();
-              
-              // Display the first prompt immediately
-              setCurrentPrompt(prompt1);
-              startCountdown(10);
-  
-              // Schedule the second prompt to be displayed after 10 seconds
-              setTimeout(() => {
-                  setCurrentPrompt(prompt2);
-                  startCountdown(10); // 10 seconds for second prompt
-                  setTotalCountdown(10); // Total countdown to stop recording after the second prompt
-              }, 10000); // 10 seconds
-          } catch (error) {
-              console.error("Error fetching prompts:", error);
-              // Handle errors if prompts cannot be fetched
-              setRecording(false);
-          }
-      } else {
-          console.error("MediaRecorder is not initialized.");
-      }
-  };
-  
-  const handleStopRecording = () => {
-      console.log("Stopping recording...");
-      setRecording(false);
-  
-      if (mediaRecorderRef.current) {
-          mediaRecorderRef.current.stop();
-      } else {
-          console.error("MediaRecorder is not initialized.");
-      }
-  
-      // Clear any active countdowns or prompts
-      setCurrentPrompt("");
-      setCountdown(0);
-      setTotalCountdown(0);
-  };
-  
+        console.log("Starting recording...");
+        setRecording(true);
+
+        // Ensure mediaRecorderRef.current is initialized
+        if (mediaRecorderRef.current) {
+            mediaRecorderRef.current.start();
+
+            try {
+                const [prompt1, prompt2] = await getRandomPrompts();
+
+                // Display the first prompt immediately
+                setCurrentPrompt(prompt1);
+                startCountdown(10);
+
+                // Schedule the second prompt to be displayed after 10 seconds
+                setTimeout(() => {
+                    setCurrentPrompt(prompt2);
+                    startCountdown(10); // 10 seconds for second prompt
+                    setTotalCountdown(10); // Total countdown to stop recording after the second prompt
+                }, 10000); // 10 seconds
+            } catch (error) {
+                console.error("Error fetching prompts:", error);
+                // Handle errors if prompts cannot be fetched
+                setRecording(false);
+            }
+        } else {
+            console.error("MediaRecorder is not initialized.");
+        }
+    };
+
+    const handleStopRecording = () => {
+        console.log("Stopping recording...");
+        setRecording(false);
+
+        if (mediaRecorderRef.current) {
+            mediaRecorderRef.current.stop();
+        } else {
+            console.error("MediaRecorder is not initialized.");
+        }
+
+        // Clear any active countdowns or prompts
+        setCurrentPrompt("");
+        setCountdown(0);
+        setTotalCountdown(0);
+    };
+
 
     const sendVideoToBackend = async (videoBlob) => {
         console.log("Sending video to backend...");
-        console.log(videoBlob);
         const formData = new FormData();
         formData.append('video', videoBlob, 'recorded-video.webm');
 
         try {
-            await axios.post('http://localhost:5000/api/upload_video', formData, {
-               headers: { 'Content-Type': 'multipart/form-data' },
+            const resp = await axios.post('http://localhost:5000/api/upload_video', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
             });
+            const frames = resp.data.frames;
             console.log("Video sent to backend successfully");
+            const imageElements = frames.map(frameBase64 => {
+                const img = new Image();
+                img.src = `data:image/jpeg;base64,${frameBase64}`;  // Corrected template literal
+                return img;
+            });
+
+            await Promise.all(imageElements.map(img => new Promise(resolve => img.onload = resolve)));
+
+            return imageElements;
         } catch (error) {
             console.error("Error sending video to backend:", error);
         }
     };
-
-    const getFramesFromBackend = async () => {
-      try {
-          const frames = (await axios.get("http://localhost:5000/api/upload_video")).data.frames;
-  
-          const imageElements = frames.map(frameBase64 => {
-              const img = new Image();
-              img.src = `data:image/jpeg;base64,${frameBase64}`;  // Corrected template literal
-              return img;
-          });
-  
-          await Promise.all(imageElements.map(img => new Promise(resolve => img.onload = resolve)));
-  
-          return imageElements;
-      } catch (error) {
-          console.error("Error fetching frames from backend:", error);
-          return [];
-      }
-  }
-
-  const getModelInference = async () => {
-    console.log("Data is being processed");
-
-    const imgs = await getFramesFromBackend();
-
-    const mobilenet = await import('@tensorflow-models/mobilenet');
-    const model = await mobilenet.load();
-
-    const predictionPromises = imgs.map(img => model.classify(img));
-    const predictions = await Promise.all(predictionPromises);
-
-    console.log('Predictions:');
-    console.log(predictions);
-};
 
     return (
         <div id="root">
