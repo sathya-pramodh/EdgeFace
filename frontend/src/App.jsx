@@ -2,6 +2,8 @@ import { useRef, useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 import '@tensorflow/tfjs-backend-webgl';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
+import '@tensorflow/tfjs-backend-cpu'
 
 const LiveFace = () => {
     const videoRef = useRef(null);
@@ -92,10 +94,10 @@ const LiveFace = () => {
         const getModelInference = async (imgs) => {
             console.log("Data is being processed");
 
-            const mobilenet = await import('@tensorflow-models/mobilenet');
-            const model = await mobilenet.load();
+            const mobilenet = await import('@tensorflow-models/coco-ssd');
+            const model = await cocoSsd.load();
 
-            const predictionPromises = imgs.map(img => model.classify(img));
+            const predictionPromises = imgs.map(img => model.detect(img));
             const predictions = await Promise.all(predictionPromises);
 
             console.log('Predictions:');
