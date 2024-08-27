@@ -13,7 +13,7 @@ This project implements a browser-based face liveness detection system using mac
 1. **Clone the Repository**:
    ```bash
    git clone [https://github.com/sathya-pramodh/LiveFace.git]
-   cd face-liveness-detection
+   cd LiveFace
 2. **Model**:
 - Select a model(for now we can build one later with a novel architecture) which is lightweight but with great accuracy such as https://arxiv.org/pdf/1909.13522 what Amogh suggested.
 
