@@ -9,6 +9,8 @@ def video_to_model_input(video_stream):
     frames = []
     count = 0
 
+    ### TODO: Also split the frame horizontally and 
+    ### send above part to frontend and below to getnumber() function
     while True:
         ret, frame = cap.read()
 
@@ -21,7 +23,7 @@ def video_to_model_input(video_stream):
             frames.append(rgb_frame)
 
     cap.release()
-
+    
     encoded_frames = []
     for frame in frames:
         _, buffer = cv2.imencode('.jpeg', frame)
