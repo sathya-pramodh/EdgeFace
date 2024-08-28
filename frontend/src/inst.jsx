@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './inst.css';
 
-const Instructions = ({ onProceed }) => {
+const Instructions = ({ onProceed, voiceEnabled, setVoiceEnabled }) => {
     const [fadeComplete, setFadeComplete] = useState(false);
-    const [voiceEnabled, setVoiceEnabled] = useState(false);
 
     useEffect(() => {
         const fadeOutDiv = document.getElementById('fade-out-div');
@@ -15,30 +14,6 @@ const Instructions = ({ onProceed }) => {
             }, 3000); // Matches the duration of the fadeOut animation
         }
     }, []);
-
-    useEffect(() => {
-        if (voiceEnabled) {
-            const instructionsText = [
-                "Read the prompts and perform the actions as shown.",
-                "Please keep an A4 size paper and a pen handy before you start recording.",
-                "Ensure the complete movement you are performing is visible in the frame.",
-                "Ensure consistent lighting to avoid shadows or glare.",
-                "Maintain proper distance from the camera to keep movements clear.",
-                "Perform movements slowly and clearly for better recognition.",
-                "Keep the camera steady to avoid shaking or blurring.",
-                "Record movements from multiple angles if possible."
-            ];
-
-            const speak = (text) => {
-                const utterance = new SpeechSynthesisUtterance(text);
-                window.speechSynthesis.speak(utterance);
-            };
-
-            instructionsText.forEach((text, index) => {
-                setTimeout(() => speak(text), index * 5000); // Adjust timing as needed
-            });
-        }
-    }, [voiceEnabled]);
 
     const handleVoiceToggle = () => {
         setVoiceEnabled(!voiceEnabled);
@@ -67,7 +42,7 @@ const Instructions = ({ onProceed }) => {
                     </ol>
                     <button onClick={onProceed}>Proceed</button>
                     <div>
-                      <br></br>
+                        <br></br>
                         <label>
                             <input
                                 type="checkbox"

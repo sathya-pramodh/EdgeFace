@@ -3,7 +3,7 @@ import axios from "axios";
 import "./App.css";
 import '@tensorflow/tfjs-backend-webgl';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
-import '@tensorflow/tfjs-backend-cpu'
+import '@tensorflow/tfjs-backend-cpu';
 import Instructions from './inst.jsx';
 
 const LiveFace = () => {
@@ -14,20 +14,25 @@ const LiveFace = () => {
     const [countdown, setCountdown] = useState(0);
     const [countdownInterval, setCountdownInterval] = useState(null);
     const [totalCountdown, setTotalCountdown] = useState(0);
-
     const [showInstructions, setShowInstructions] = useState(true);
+    const [voiceEnabled, setVoiceEnabled] = useState(false); // State for voice prompts
 
     const handleProceed = () => {
         setShowInstructions(false);
     };
 
-    const promptVideos = {
-        // Prompt videos mapping
+    const generateRandomNumber = () => {
+        return Math.floor(Math.random() * 10000); // Generate a random number between 0 and 9999
+    };
+
+    const getRandomPrompts = async () => {
+        const randomNumber = generateRandomNumber();
+        return [randomNumber];
     };
 
     useEffect(() => {
         if (showInstructions) return;
-        
+
         const getUserMedia = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -62,14 +67,9 @@ const LiveFace = () => {
             console.log('Predictions:');
             console.log(predictions);
         };
+
         getUserMedia();
     }, [showInstructions]);
-
-    const getRandomPrompts = async () => {
-        const handGesturePrompt = (await axios.get("http://localhost:5000/api/get-hand-gesture-prompt")).data.gesture;
-        const headGesturePrompt = (await axios.get("http://localhost:5000/api/get-head-gesture-prompt")).data.gesture;
-        return [handGesturePrompt, headGesturePrompt];
-    };
 
     const startCountdown = (seconds) => {
         setCountdown(seconds);
@@ -112,18 +112,14 @@ const LiveFace = () => {
             mediaRecorderRef.current.start();
 
             try {
-                const [prompt1, prompt2] = await getRandomPrompts();
+                const [randomNumber] = await getRandomPrompts();
 
-                // Display the first prompt immediately
-                setCurrentPrompt(prompt1);
+                // Display the random number as the prompt
+                setCurrentPrompt(`Write down this number: ${randomNumber}`);
                 startCountdown(10);
 
-                // Schedule the second prompt to be displayed after 10 seconds
-                setTimeout(() => {
-                    setCurrentPrompt(prompt2);
-                    startCountdown(10); // 10 seconds for second prompt
-                    setTotalCountdown(10); // Total countdown to stop recording after the second prompt
-                }, 10000); // 10 seconds
+                // Set the total countdown to stop recording after the prompt
+                setTotalCountdown(10); // 10 seconds for the prompt
             } catch (error) {
                 console.error("Error fetching prompts:", error);
                 // Handle errors if prompts cannot be fetched
@@ -175,10 +171,21 @@ const LiveFace = () => {
         }
     };
 
+    useEffect(() => {
+        if (voiceEnabled && currentPrompt) {
+            const speak = (text) => {
+                const utterance = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(utterance);
+            };
+
+            speak(currentPrompt);
+        }
+    }, [currentPrompt, voiceEnabled]);
+
     return (
         <div>
             {showInstructions ? (
-                <Instructions onProceed={handleProceed} />
+                <Instructions onProceed={handleProceed} voiceEnabled={voiceEnabled} setVoiceEnabled={setVoiceEnabled} />
             ) : (
                 <div id="root">
                     <h1>LiveFace</h1>
@@ -188,24 +195,13 @@ const LiveFace = () => {
                             <div>
                                 <p>{currentPrompt}</p>
                                 {countdown > 0 && (
-                                    <p>Time remaining for current prompt: {countdown}s</p>
+                                    <p>Time remaining: {countdown}s</p>
                                 )}
                             </div>
                             <button onClick={recording ? handleStopRecording : handleStartRecording}>
                                 {recording ? "Stop Recording" : "Start Recording"}
                             </button>
                         </div>
-                        {currentPrompt && (
-                            <div className="prompt-video-section">
-                                <video
-                                    src={promptVideos[currentPrompt]}
-                                    autoPlay
-                                    loop
-                                    muted
-                                />
-                                <p className="instruction-text">Please perform a similar movement</p>
-                            </div>
-                        )}
                     </div>
                 </div>
             )}
