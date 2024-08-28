@@ -1,4 +1,4 @@
-DEPS=flask flask_cors opencv-python
+DEPS=flask flask_cors opencv-python tensorflow pillow matplotlib
 run:
 	python3 main.py
 
