@@ -4,6 +4,7 @@ import "./App.css";
 import '@tensorflow/tfjs-backend-webgl';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs-backend-cpu'
+import Instructions from './inst.jsx';
 
 const LiveFace = () => {
     const videoRef = useRef(null);
@@ -14,61 +15,19 @@ const LiveFace = () => {
     const [countdownInterval, setCountdownInterval] = useState(null);
     const [totalCountdown, setTotalCountdown] = useState(0);
 
-    const [fadeComplete, setFadeComplete] = useState(false);
+    const [showInstructions, setShowInstructions] = useState(true);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setFadeComplete(true);
-        }, 3000); // Match the duration of the fadeOut animation (6 seconds)
-
-        return () => clearTimeout(timer);
-    }, []);
+    const handleProceed = () => {
+        setShowInstructions(false);
+    };
 
     const promptVideos = {
-        "Raise your eyebrows as if surprised.": "/videos/eyebrowraise.mp4",
-        "Smile widely.": "/videos/widesmile.mp4",
-        "Frown and then relax your face.": "/videos/frown.mp4",
-        "Close your eyes for two seconds and then open them.": "/videos/2eyeclose.mp4",
-        "Turn your head to the left.": "/videos/headleft.mp4",
-        "Turn your head to the right.": "/videos/headright.mp4",
-        "Tilt your head up to look at the ceiling.": "/videos/headup.mp4",
-        "Tilt your head down to look at the floor.": "/videos/headdown.mp4",
-        "Open your mouth wide and close it.": "/videos/mouthopen.mp4",
-        "Touch your nose with your right hand.": "/videos/rightnosetouch.mp4",
-        "Touch your nose with your left hand.": "/videos/leftnosetouch.mp4",
-        "Touch your right ear with your left hand.": "/videos/rightearlefthand.mp4",
-        "Touch your left ear with your right hand.": "/videos/leftearrighthand.mp4",
-        "Shake your head from side to side slowly.": "/videos/headshake.mp4",
-        "Wave your right hand.": "/videos/righthandwave.mp4",
-        "Wave your left hand.": "/videos/lefthandwave.mp4",
-        "Wink slowly with your left eye.": "/videos/lefteyewink.mp4",
-        "Wink slowly with your right eye.": "/videos/righteyewink.mp4",
-        "Nod your head up and down slowly.": "/videos/slownod.mp4",
-        "Cover your mouth with your right hand for a moment.": "/videos/righthandmouth.mp4",
-        "Cover your mouth with your left hand for a moment.": "/videos/lefthandmouth.mp4",
-        "Touch your chin with your right hand.": "/videos/chinrighttouch.mp4",
-        "Touch your chin with your left hand.": "/videos/chinlefttouch.mp4",
-        "Place your left hand on top of your head.": "/videos/lefthandonhead.mp4",
-        "Place your right hand on top of your head.": "/videos/righthandonhead.mp4",
-        "Raise your left hand as if to ask a question.": "/videos/lefthandraise.mp4",
-        "Raise your right hand as if to ask a question.": "/videos/righthandraise.mp4",
-        "Clap your hands twice gently.": "/videos/2clap.mp4",
-        "Scratch your head gently with your left hand.": "/videos/lefthandscratch.mp4",
-        "Scratch your head gently with your right hand.": "/videos/righthandscratch.mp4",
-        "Put your left hand on your shoulder.": "/videos/leftonsh.mp4",
-        "Put your right hand on your shoulder.": "/videos/rightonsh.mp4",
-        "Point to the left with your right hand.": "/videos/pointleftwithright.mp4",
-        "Point to the right with your left hand.": "/videos/pointrightwithleft.mp4",
-        "Place your left hand on your chest.": "/videos/leftchest.mp4",
-        "Place your right hand on your chest.": "/videos/rightchest.mp4",
-        "Place both hands on your cheeks and hold for two seconds.": "/videos/bothonface.mp4",
-        "Raise both hands above your head.": "/videos/raiseboth.mp4",
-        "Pinch your fingers together slowly.": "/videos/pinching.mp4",
-        "Lower both hands to your sides.": "/videos/handlower.mp4",
+        // Prompt videos mapping
     };
 
     useEffect(() => {
-        if (!fadeComplete) return;
+        if (showInstructions) return;
+        
         const getUserMedia = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -104,7 +63,7 @@ const LiveFace = () => {
             console.log(predictions);
         };
         getUserMedia();
-    }, [fadeComplete])
+    }, [showInstructions]);
 
     const getRandomPrompts = async () => {
         const handGesturePrompt = (await axios.get("http://localhost:5000/api/get-hand-gesture-prompt")).data.gesture;
@@ -143,7 +102,6 @@ const LiveFace = () => {
             return () => clearInterval(intervalId);
         }
     }, [totalCountdown, recording]);
-
 
     const handleStartRecording = async () => {
         console.log("Starting recording...");
@@ -192,7 +150,6 @@ const LiveFace = () => {
         setTotalCountdown(0);
     };
 
-
     const sendVideoToBackend = async (videoBlob) => {
         console.log("Sending video to backend...");
         const formData = new FormData();
@@ -206,7 +163,7 @@ const LiveFace = () => {
             console.log("Video sent to backend successfully");
             const imageElements = frames.map(frameBase64 => {
                 const img = new Image();
-                img.src = `data:image/jpeg;base64,${frameBase64}`;  // Corrected template literal
+                img.src = `data:image/jpeg;base64,${frameBase64}`;
                 return img;
             });
 
@@ -219,12 +176,11 @@ const LiveFace = () => {
     };
 
     return (
-        <div id="root">
-            {!fadeComplete && (
-                <div id="fade-out-div" className="fade-out">LiveFace</div>
-            )}
-            {fadeComplete && (
-                <>
+        <div>
+            {showInstructions ? (
+                <Instructions onProceed={handleProceed} />
+            ) : (
+                <div id="root">
                     <h1>LiveFace</h1>
                     <div className="liveface-container">
                         <div className="recording-section">
@@ -251,9 +207,10 @@ const LiveFace = () => {
                             </div>
                         )}
                     </div>
-                </>
+                </div>
             )}
         </div>
     );
 };
+
 export default LiveFace;
