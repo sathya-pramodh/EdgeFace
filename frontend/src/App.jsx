@@ -22,7 +22,7 @@ const LiveFace = () => {
     };
 
     const generateRandomNumber = () => {
-        return Math.floor(Math.random() * 10000); // Generate a random number between 0 and 9999
+        return Math.floor(Math.random() * 9000) + 1000; 
     };
 
     const getRandomPrompts = async () => {
