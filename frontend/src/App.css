@@ -1,4 +1,4 @@
-
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -100,4 +100,58 @@ p {
   src: url('./fonts/static/Oswald-Bold.ttf') format('truetype');
 }
 
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
 
+.video-container::after {
+  content: "";
+  position: absolute;
+  bottom: 40%;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background-color: rgb(159, 159, 159);
+  z-index: 10; 
+}
+
+.instruction-box-container {
+  display: flex;
+  justify-content: center;
+}
+
+.instruction-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* max-width: 400px; */
+  width: max-content;
+  padding: 10px;
+  background-color: #c9f5da;
+  border-radius: 8px; 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+  color: #333; 
+  font-family: 'Roboto', sans-serif; 
+  /* font-weight: lighter; */
+  margin-left: 0; 
+}
+
+.icon-text {
+  display: flex;
+  align-items: flex-start;
+}
+
+.material-icons {
+  color: #1963d2;
+  margin-right: 10px; 
+  font-size: 24px; 
+}
+
+.instruction-box p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}

@@ -13,7 +13,6 @@ const LiveFace = () => {
     const [recording, setRecording] = useState(false);
     const [countdown, setCountdown] = useState(0);
     const [countdownInterval, setCountdownInterval] = useState(null);
-    const [totalCountdown, setTotalCountdown] = useState(0);
     const [showInstructions, setShowInstructions] = useState(true);
     const [voiceEnabled, setVoiceEnabled] = useState(false); // State for voice prompts
 
@@ -22,7 +21,7 @@ const LiveFace = () => {
     };
 
     const generateRandomNumber = () => {
-        return Math.floor(Math.random() * 9000) + 1000; 
+        return Math.floor(Math.random() * 9000) + 1000;
     };
 
     const getRandomPrompts = async () => {
@@ -50,22 +49,20 @@ const LiveFace = () => {
                         await getModelInference(imgs);
                     }
                 };
+                const getModelInference = async (imgs) => {
+                    console.log("Data is being processed");
+
+                    const model = await cocoSsd.load();
+
+                    const predictionPromises = imgs.map(img => model.detect(img));
+                    const predictions = await Promise.all(predictionPromises);
+
+                    console.log('Predictions:');
+                    console.log(predictions);
+                };
             } catch (error) {
                 console.error("Error accessing media devices.", error);
             }
-        };
-
-        const getModelInference = async (imgs) => {
-            console.log("Data is being processed");
-
-            const mobilenet = await import('@tensorflow-models/coco-ssd');
-            const model = await cocoSsd.load();
-
-            const predictionPromises = imgs.map(img => model.detect(img));
-            const predictions = await Promise.all(predictionPromises);
-
-            console.log('Predictions:');
-            console.log(predictions);
         };
 
         getUserMedia();
@@ -79,6 +76,7 @@ const LiveFace = () => {
             setCountdown((prev) => {
                 if (prev <= 1) {
                     clearInterval(intervalId);
+                    handleStopRecording();
                     return 0;
                 }
                 return prev - 1;
@@ -86,22 +84,6 @@ const LiveFace = () => {
         }, 1000);
         setCountdownInterval(intervalId);
     };
-
-    useEffect(() => {
-        if (totalCountdown > 0 && recording) {
-            const intervalId = setInterval(() => {
-                setTotalCountdown((prev) => {
-                    if (prev <= 1) {
-                        clearInterval(intervalId);
-                        handleStopRecording(); // Stop recording when total countdown reaches zero
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-            return () => clearInterval(intervalId);
-        }
-    }, [totalCountdown, recording]);
 
     const handleStartRecording = async () => {
         console.log("Starting recording...");
@@ -118,8 +100,6 @@ const LiveFace = () => {
                 setCurrentPrompt(`Write down this number: ${randomNumber}`);
                 startCountdown(10);
 
-                // Set the total countdown to stop recording after the prompt
-                setTotalCountdown(10); // 10 seconds for the prompt
             } catch (error) {
                 console.error("Error fetching prompts:", error);
                 // Handle errors if prompts cannot be fetched
@@ -133,18 +113,11 @@ const LiveFace = () => {
     const handleStopRecording = () => {
         console.log("Stopping recording...");
         setRecording(false);
-
+        setCurrentPrompt("");
         if (mediaRecorderRef.current) {
             mediaRecorderRef.current.stop();
-        } else {
-            console.error("MediaRecorder is not initialized.");
         }
-
-        // Clear any active countdowns or prompts
-        setCurrentPrompt("");
-        setCountdown(0);
-        setTotalCountdown(0);
-    };
+    }
 
     const sendVideoToBackend = async (videoBlob) => {
         console.log("Sending video to backend...");
@@ -191,7 +164,19 @@ const LiveFace = () => {
                     <h1>LiveFace</h1>
                     <div className="liveface-container">
                         <div className="recording-section">
-                            <video ref={videoRef} autoPlay playsInline />
+                            <div className={recording ? "video-container" : ""}>
+                                <video ref={videoRef} autoPlay playsInline />
+                            </div>
+                            {recording && (
+                                <div className="instruction-box-container">
+                                    <div className="instruction-box">
+                                        <div className="icon-text">
+                                            <span className="material-icons">info</span>
+                                            <p>Hold the prompted number below the line</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             <div>
                                 <p>{currentPrompt}</p>
                                 {countdown > 0 && (
@@ -207,6 +192,6 @@ const LiveFace = () => {
             )}
         </div>
     );
-};
+}
 
 export default LiveFace;
