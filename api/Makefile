@@ -7,5 +7,4 @@ deps:
 
 test: 
 	cd tests; \
-	sh test_get_hand_gesture_prompt.sh; \
-	sh test_get_head_gesture_prompt.sh
+	sh test_segment_image.sh

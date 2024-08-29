@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 import '@tensorflow/tfjs-backend-webgl';
+import * as tf from "@tensorflow/tfjs";
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs-backend-cpu';
 import Instructions from './inst.jsx';
@@ -44,21 +45,24 @@ const LiveFace = () => {
 
                 mediaRecorderRef.current.ondataavailable = async (event) => {
                     if (event.data.size > 0) {
+                        // TODO: Change the video recording to be capturing photos instead.
+                        // Then pass the saved image into getModelInference.
+                        // Leaving it at 0 params for now.
+                        // Pass the image as two parts
+                        // Top half for face recognition using cocoSsd and 
+                        // Bottom half for digit recognition using the digit-recognizer.
                         const blob = new Blob([event.data], { type: "video/webm" });
-                        const imgs = await sendVideoToBackend(blob);
-                        await getModelInference(imgs);
+                        await getModelInference();
                     }
                 };
-                const getModelInference = async (imgs) => {
+                const getModelInference = async () => {
                     console.log("Data is being processed");
 
                     const model = await cocoSsd.load();
-
-                    const predictionPromises = imgs.map(img => model.detect(img));
-                    const predictions = await Promise.all(predictionPromises);
-
-                    console.log('Predictions:');
-                    console.log(predictions);
+                    // TODO: Make this work by converting the keras model into tfjs and 
+                    // serve the model.json at this endpoint.
+                    const digitModel = await tf.loadLayersModel("http://localhost:5000/api/get-digit-recognizer");
+                    console.log(digitModel);
                 };
             } catch (error) {
                 console.error("Error accessing media devices.", error);
