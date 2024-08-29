@@ -63,6 +63,9 @@ const LiveFace = () => {
                     // serve the model.json at this endpoint.
                     const digitModel = await tf.loadLayersModel("http://localhost:5000/api/get-digit-recognizer");
                     console.log(digitModel);
+                    const response = await axios.get("http://localhost:5000/api/get-sample-image");
+                    const exampleDigits = response.data.images
+                    exampleDigits.forEach((digit) => console.log(digit, digitModel.predict(digit)))
                 };
             } catch (error) {
                 console.error("Error accessing media devices.", error);

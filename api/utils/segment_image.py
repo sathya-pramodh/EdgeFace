@@ -1,5 +1,4 @@
 import cv2
-from cv2.typing import Scalar
 import numpy as np
 
 
@@ -21,15 +20,15 @@ def segment_image(image_path):
             if h > w:
                 pad = (h - w) // 2
                 digit = cv2.copyMakeBorder(
-                    digit, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=Scalar())
+                    digit, 0, 0, pad, pad, cv2.BORDER_CONSTANT, value=[0])
             elif w > h:
                 pad = (w - h) // 2
                 digit = cv2.copyMakeBorder(
-                    digit, pad, pad, 0, 0, cv2.BORDER_CONSTANT, value=Scalar())
+                    digit, pad, pad, 0, 0, cv2.BORDER_CONSTANT, value=[0])
 
             digit = cv2.resize(digit, (28, 28))
             digit = digit.astype('float32') / 255.0
-            digit = np.expand_dims(digit, axis=-1)  # Add channel dimension
+            digit = np.expand_dims(digit, axis=0)
             digit_images.append(digit.tolist())
 
     return digit_images
