@@ -5,7 +5,7 @@ import os
 from utils.hand_gesture import generate_hand_gesture
 from utils.head_gesture import generate_head_gesture
 from utils.video_chop import video_to_model_input
-from models.digit_model import getnumber
+# from models.digit_model import getnumber
 
 app = Flask(__file__)
 CORS(app)
@@ -80,14 +80,14 @@ def upload_video():
 
     return jsonify({"frames": frames})
 
-@app.route('/api/get-digit-recognizer', methods=['POST'])
-@cross_origin(origins='*')
-def get_digit_prediction():
+# @app.route('/api/get-digit-recognizer', methods=['POST'])
+# @cross_origin(origins='*')
+# def get_digit_prediction():
     
-    ### TODO: Get the prediction from the digit_model.py script
-    # Template code
-    predicted = getnumber()
-    return jsonify({"predicted":{predicted}})
+#     ### TODO: Get the prediction from the digit_model.py script
+#     # Template code
+#     predicted = getnumber()
+#     return jsonify({"predicted":{predicted}})
 
 if __name__ == "__main__":
     app.run(debug=True)
