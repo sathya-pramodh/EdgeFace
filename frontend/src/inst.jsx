@@ -32,7 +32,7 @@ const Instructions = ({ onProceed, voiceEnabled, setVoiceEnabled }) => {
                     <p>Please read these instructions carefully and ensure you follow them:</p>
                     <ol>
                         <li>Read the prompts and perform the actions as shown</li>
-                        <li>Please keep an A4 size paper and a pen handy before you start recording</li>
+                        <li>Please keep an A4 size paper and a <b>MARKER</b> handy before you start recording</li>
                         <li>Ensure the complete movement you are performing is visible in the frame</li>
                         <li>Ensure consistent lighting to avoid shadows or glare</li>
                         <li>Maintain proper distance from the camera to keep movements clear</li>

@@ -7,7 +7,7 @@
 
 import cv2
 import numpy as np
-from tensorflow.keras.models import load_model
+from keras.models import load_model
 import matplotlib.pyplot as plt
 
 
@@ -45,8 +45,8 @@ def segment_image(image_path):
     return digit_images, bounding_boxes, img
 
 
-# Load the pre-trained model
-model = load_model('mnist_simple_cnn.h5')
+'''# Load the pre-trained model
+model = load_model('/home/amogh/LiveFace/api/models/mnist_simple_cnn.h5')
 
 
 def predict_digits(image_path, confidence_threshold=0.5):
@@ -76,12 +76,13 @@ def predict_digits(image_path, confidence_threshold=0.5):
     plt.title('Segmented Digits with Predictions')
     plt.axis('off')
     plt.show()
-
+    print(confidences)
     return ''.join(predictions)
-
+'''
 
 # Example usage
 # Update this to the correct path
-image_path = '/Users/mangalabhandarkar/LiveFace_MultiDigitModel/lib/Adobe Scan 29-Aug-2024 (1)_page-0001.jpg'
+'''image_path = '/home/amogh/LiveFace/api/tests/8351(2).jpg'
 predicted_number = predict_digits(image_path)
 print(f'Predicted Number: {predicted_number}')
+'''

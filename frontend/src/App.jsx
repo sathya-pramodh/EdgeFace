@@ -42,31 +42,6 @@ const LiveFace = () => {
                 mediaRecorderRef.current = new MediaRecorder(stream, {
                     mimeType: "video/webm",
                 });
-
-                mediaRecorderRef.current.ondataavailable = async (event) => {
-                    if (event.data.size > 0) {
-                        // TODO: Change the video recording to be capturing photos instead.
-                        // Then pass the saved image into getModelInference.
-                        // Leaving it at 0 params for now.
-                        // Pass the image as two parts
-                        // Top half for face recognition using cocoSsd and 
-                        // Bottom half for digit recognition using the digit-recognizer.
-                        const blob = new Blob([event.data], { type: "video/webm" });
-                        await getModelInference();
-                    }
-                };
-                const getModelInference = async () => {
-                    console.log("Data is being processed");
-
-                    const model = await cocoSsd.load();
-                    // TODO: Make this work by converting the keras model into tfjs and 
-                    // serve the model.json at this endpoint.
-                    const digitModel = await tf.loadLayersModel("http://localhost:5000/api/get-digit-recognizer");
-                    console.log(digitModel);
-                    const response = await axios.get("http://localhost:5000/api/get-sample-image");
-                    const exampleDigits = response.data.images
-                    exampleDigits.forEach((digit) => console.log(digit, digitModel.predict(digit)))
-                };
             } catch (error) {
                 console.error("Error accessing media devices.", error);
             }
@@ -92,62 +67,136 @@ const LiveFace = () => {
         setCountdownInterval(intervalId);
     };
 
-    const handleStartRecording = async () => {
-        console.log("Starting recording...");
-        setRecording(true);
+    const handleClickPicture = async () => {
+        try {
+            const [randomNumber] = await getRandomPrompts();
 
-        // Ensure mediaRecorderRef.current is initialized
-        if (mediaRecorderRef.current) {
-            mediaRecorderRef.current.start();
-
-            try {
-                const [randomNumber] = await getRandomPrompts();
-
-                // Display the random number as the prompt
-                setCurrentPrompt(`Write down this number: ${randomNumber}`);
-                startCountdown(10);
-
-            } catch (error) {
-                console.error("Error fetching prompts:", error);
-                // Handle errors if prompts cannot be fetched
-                setRecording(false);
+            
+            setCurrentPrompt(`Write down this number: ${randomNumber}`);
+            
+            
+            var number = parseInt(randomNumber);
+            number = number.toString();
+            console.log(number);
+            const canvas = document.createElement("canvas");
+            const video = videoRef.current;
+            
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            
+            const context = canvas.getContext("2d");
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            
+            const imageDataURL = canvas.toDataURL("image/jpeg");
+            console.log("Image Data URL: ", imageDataURL);
+            
+            
+            const base64ImageData = imageDataURL.split(",")[1];
+            console.log(base64ImageData);
+    
+            
+            const byteString = atob(base64ImageData);
+            const arrayBuffer = new ArrayBuffer(byteString.length);
+            const uint8Array = new Uint8Array(arrayBuffer);
+    
+            for (let i = 0; i < byteString.length; i++) {
+                uint8Array[i] = byteString.charCodeAt(i);
             }
+    
+            const blob = new Blob([uint8Array], { type: "image/jpeg" });
+            console.log("Blob: ",blob);
+            
+            const result = await sendImageToBackend(blob);
+            console.log(result)
+            return result;
+        } catch (error) {
+            console.error("Error capturing and sending image:", error);
+        }
+        // TODO: Add animations here depending on the result
+        // if it is false tell the user it was unsuccesful and make page refresh so user can try again
+        // if it is true show it as success and show "Thank you for using" page
+        // or something like that.
+    };
+    
+
+    const getModelInference = async (face, digits) => {
+        console.log("Data is being processed");
+
+        const model = await cocoSsd.load();
+
+        const predictions = await model.detect(face);
+
+        console.log(predictions);
+        var coco_class;
+        if (predictions && predictions.length > 0) {
+            coco_class = predictions[0].class;
         } else {
-            console.error("MediaRecorder is not initialized.");
+            coco_class = false;
+        }
+        
+        const digitModel = await tf.loadGraphModel("http://localhost:5000/api/get-digit-recognizer");
+        console.log(digitModel);
+        
+        for (const digit of digits) {
+            
+            const digitArray = new Float32Array(digit.flat()); // Flatten if necessary
+        
+            
+            const digitTensor = tf.tensor4d(digitArray, [1, 28, 28, 1]); // Shape should be [batch_size, height, width, channels]
+        
+            
+            const prediction = digitModel.predict(digitTensor);
+        
+            
+            const predictionArray = await prediction.array(); // Convert the Tensor to an array
+            console.log(predictionArray);
+        
+            
+            const predictedDigit = predictionArray[0].indexOf(Math.max(...predictionArray[0]));
+            console.log(`Predicted Digit: ${predictedDigit}`);
+        }
+        if (coco_class == 'person') {
+            return true;
+        } else {
+            return false;
         }
     };
+    
 
-    const handleStopRecording = () => {
-        console.log("Stopping recording...");
-        setRecording(false);
-        setCurrentPrompt("");
-        if (mediaRecorderRef.current) {
-            mediaRecorderRef.current.stop();
-        }
+    const createImageFromBase64 = (base64String) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = `data:image/jpeg;base64,${base64String}`;
+        });
     }
 
-    const sendVideoToBackend = async (videoBlob) => {
+    const sendImageToBackend = async (blob) => {
         console.log("Sending video to backend...");
         const formData = new FormData();
-        formData.append('video', videoBlob, 'recorded-video.webm');
-
+        formData.append('image', blob, 'captured-image.jpeg');
+        console.log(blob.size);
+        for (let [key, value] of formData.entries()) {
+            console.log(`FormData entry - Key: ${key}, Value:`, value);
+        }
         try {
-            const resp = await axios.post('http://localhost:5000/api/upload_video', formData, {
+            console.log("Sending images...");
+            const resp = await axios.post('http://localhost:5000/api/upload_image', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            const frames = resp.data.frames;
-            console.log("Video sent to backend successfully");
-            const imageElements = frames.map(frameBase64 => {
-                const img = new Image();
-                img.src = `data:image/jpeg;base64,${frameBase64}`;
-                return img;
-            });
-
-            await Promise.all(imageElements.map(img => new Promise(resolve => img.onload = resolve)));
-
-            return imageElements;
+            console.log("Image sent to backend successfully: ",resp.data);
+            const faceImage = resp.data.face;
+            const digitImages = resp.data.digit;
+            
+            const face = await createImageFromBase64(faceImage);
+            const result = await getModelInference(face, digitImages);
+            return result;
         } catch (error) {
-            console.error("Error sending video to backend:", error);
+            console.error("Error sending image to backend:", error);
         }
     };
 
@@ -171,10 +220,10 @@ const LiveFace = () => {
                     <h1>LiveFace</h1>
                     <div className="liveface-container">
                         <div className="recording-section">
-                            <div className={recording ? "video-container" : ""}>
+                            <div className={"video-container"}>
                                 <video ref={videoRef} autoPlay playsInline />
                             </div>
-                            {recording && (
+                            ()
                                 <div className="instruction-box-container">
                                     <div className="instruction-box">
                                         <div className="icon-text">
@@ -183,15 +232,11 @@ const LiveFace = () => {
                                         </div>
                                     </div>
                                 </div>
-                            )}
-                            <div>
+                            <div>    
                                 <p>{currentPrompt}</p>
-                                {countdown > 0 && (
-                                    <p>Time remaining: {countdown}s</p>
-                                )}
                             </div>
-                            <button onClick={recording ? handleStopRecording : handleStartRecording}>
-                                {recording ? "Stop Recording" : "Start Recording"}
+                            <button onClick={handleClickPicture}>
+                                {"Click Picture"}
                             </button>
                         </div>
                     </div>
