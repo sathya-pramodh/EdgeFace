@@ -11,9 +11,9 @@ const LiveFace = () => {
     const videoRef = useRef(null);
     const mediaRecorderRef = useRef(null);
     const [currentPrompt, setCurrentPrompt] = useState("");
-    const [recording, setRecording] = useState(false);
-    const [countdown, setCountdown] = useState(0);
-    const [countdownInterval, setCountdownInterval] = useState(null);
+    // const [recording, setRecording] = useState(false);
+    // const [countdown, setCountdown] = useState(0);
+    // const [countdownInterval, setCountdownInterval] = useState(null);
     const [showInstructions, setShowInstructions] = useState(true);
     const [voiceEnabled, setVoiceEnabled] = useState(false); // State for voice prompts
 
@@ -50,23 +50,6 @@ const LiveFace = () => {
         getUserMedia();
     }, [showInstructions]);
 
-    const startCountdown = (seconds) => {
-        setCountdown(seconds);
-        if (countdownInterval) clearInterval(countdownInterval);
-
-        const intervalId = setInterval(() => {
-            setCountdown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(intervalId);
-                    handleStopRecording();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        setCountdownInterval(intervalId);
-    };
-
     const handleClickPicture = async () => {
         try {
             const [randomNumber] = await getRandomPrompts();
@@ -77,7 +60,7 @@ const LiveFace = () => {
             
             var number = parseInt(randomNumber);
             number = number.toString();
-            console.log(number);
+            
             const canvas = document.createElement("canvas");
             const video = videoRef.current;
             
@@ -91,12 +74,8 @@ const LiveFace = () => {
             
             
             const imageDataURL = canvas.toDataURL("image/jpeg");
-            console.log("Image Data URL: ", imageDataURL);
-            
             
             const base64ImageData = imageDataURL.split(",")[1];
-            console.log(base64ImageData);
-    
             
             const byteString = atob(base64ImageData);
             const arrayBuffer = new ArrayBuffer(byteString.length);
@@ -107,7 +86,6 @@ const LiveFace = () => {
             }
     
             const blob = new Blob([uint8Array], { type: "image/jpeg" });
-            console.log("Blob: ",blob);
             
             const result = await sendImageToBackend(blob);
             console.log(result)
@@ -179,10 +157,7 @@ const LiveFace = () => {
         console.log("Sending video to backend...");
         const formData = new FormData();
         formData.append('image', blob, 'captured-image.jpeg');
-        console.log(blob.size);
-        for (let [key, value] of formData.entries()) {
-            console.log(`FormData entry - Key: ${key}, Value:`, value);
-        }
+        
         try {
             console.log("Sending images...");
             const resp = await axios.post('http://localhost:5000/api/upload_image', formData, {
