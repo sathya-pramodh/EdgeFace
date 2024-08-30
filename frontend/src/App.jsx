@@ -14,7 +14,7 @@ const LiveFace = () => {
     const [showInstructions, setShowInstructions] = useState(true);
     const [voiceEnabled, setVoiceEnabled] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(null);
-    const [reloadCount, setReloadCount] = useState(0);
+    const [reloadCount, setReloadCount] = useState(4);
     const [countdown, setCountdown] = useState(null);
     const [authenticationFailed, setAuthenticationFailed] = useState(false);
 
@@ -103,9 +103,9 @@ const LiveFace = () => {
                     if (result) {
                         setIsAuthenticated(true);
                     } else {
-                        if (reloadCount < 4) {
+                        if (reloadCount > 0) {
                             setIsAuthenticated(false);
-                            setReloadCount(prevCount => prevCount + 1);
+                            setReloadCount(prevCount => prevCount - 1);
                         } else {
                             setAuthenticationFailed(true);
                             alert("Maximum retries reached.");
@@ -221,6 +221,7 @@ const LiveFace = () => {
                             {countdown !== null && (
                                 <div>
                                     <p>Picture will be taken in: {countdown} seconds</p>
+                                    <p>You have {reloadCount} tries remaining</p>
                                 </div>
                             )}
                         </div>
