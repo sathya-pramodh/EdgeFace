@@ -38,8 +38,10 @@ const LiveFace = () => {
             });
             videoRef.current.srcObject = stream;
             mediaRecorderRef.current = new MediaRecorder(stream, {
-                mimeType: "video/webm",
+                mimeType: "video/webm",    
             });
+            const [randomNumber] = await getRandomPrompts();
+            setCurrentPrompt(`Write down this number: ${randomNumber}`);
         } catch (error) {
             console.error("Error accessing media devices.", error);
         }
@@ -53,11 +55,6 @@ const LiveFace = () => {
     const handleClickPicture = async () => {
         try {
             console.log("Generating prompt...");
-
-            const [randomNumber] = await getRandomPrompts();
-            setCurrentPrompt(`Write down this number: ${randomNumber}`);
-            
-            console.log("Prompt generated:", randomNumber);
 
             // Start a 5-second countdown
             let countdownValue = 5;
