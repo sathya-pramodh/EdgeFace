@@ -197,8 +197,15 @@ const LiveFace = () => {
     };
 
     return (
+        
         <div>
-            {showInstructions ? (
+            {authenticationFailed ? (
+                <div>
+                    <h1>Authentication Failed</h1>
+                    <p>You have failed the authentication process. Please try again later.</p>
+                </div>
+
+            ):showInstructions ? (
                 <Instructions onProceed={handleProceed} voiceEnabled={voiceEnabled} setVoiceEnabled={setVoiceEnabled} />
             ) : isAuthenticated === null ? (
                 <div id="root">
