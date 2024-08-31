@@ -15,7 +15,8 @@ const LiveFace = () => {
     const [voiceEnabled, setVoiceEnabled] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(null);
     const [reloadCount, setReloadCount] = useState(4);
-    const [countdown, setCountdown] = useState(null);
+    const [timer, setTimer] = useState(30);
+    const timerRef = useRef(null);
     const [authenticationFailed, setAuthenticationFailed] = useState(false);
 
     const handleProceed = () => {
@@ -40,8 +41,10 @@ const LiveFace = () => {
             mediaRecorderRef.current = new MediaRecorder(stream, {
                 mimeType: "video/webm",    
             });
+            console.log("Generating prompt...");
             const [randomNumber] = await getRandomPrompts();
             setCurrentPrompt(`Write down this number: ${randomNumber}`);
+            resetTimer();
         } catch (error) {
             console.error("Error accessing media devices.", error);
         }
@@ -54,62 +57,49 @@ const LiveFace = () => {
 
     const handleClickPicture = async () => {
         try {
-            console.log("Generating prompt...");
+            clearInterval(timerRef.current);
+            resetTimer();
 
-            // Start a 5-second countdown
-            let countdownValue = 5;
-            setCountdown(countdownValue);
-            
-            const countdownInterval = setInterval(async () => {
-                countdownValue -= 1;
-                setCountdown(countdownValue);
-                
-                if (countdownValue === 0) {
-                    clearInterval(countdownInterval);
-                    
-                    console.log("Capturing image...");
+            console.log("Capturing image...");
 
-                    // Capture the picture after countdown ends
-                    const canvas = document.createElement("canvas");
-                    const video = videoRef.current;
+            const canvas = document.createElement("canvas");
+            const video = videoRef.current;
 
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
 
-                    const context = canvas.getContext("2d");
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const context = canvas.getContext("2d");
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                    const imageDataURL = canvas.toDataURL("image/jpeg");
-                    const base64ImageData = imageDataURL.split(",")[1];
-                    const byteString = atob(base64ImageData);
-                    const arrayBuffer = new ArrayBuffer(byteString.length);
-                    const uint8Array = new Uint8Array(arrayBuffer);
+            const imageDataURL = canvas.toDataURL("image/jpeg");
+            const base64ImageData = imageDataURL.split(",")[1];
+            const byteString = atob(base64ImageData);
+            const arrayBuffer = new ArrayBuffer(byteString.length);
+            const uint8Array = new Uint8Array(arrayBuffer);
 
-                    for (let i = 0; i < byteString.length; i++) {
-                        uint8Array[i] = byteString.charCodeAt(i);
-                    }
+            for (let i = 0; i < byteString.length; i++) {
+                uint8Array[i] = byteString.charCodeAt(i);
+            }
 
-                    const blob = new Blob([uint8Array], { type: "image/jpeg" });
+            const blob = new Blob([uint8Array], { type: "image/jpeg" });
 
-                    console.log("Sending image to backend...");
+            console.log("Sending image to backend...");
 
-                    const result = await sendImageToBackend(blob);
+            const result = await sendImageToBackend(blob);
 
-                    console.log("Result from model:", result);
+            console.log("Result from model:", result);
 
-                    if (result) {
-                        setIsAuthenticated(true);
-                    } else {
-                        if (reloadCount > 0) {
-                            setIsAuthenticated(false);
-                            setReloadCount(prevCount => prevCount - 1);
-                        } else {
-                            setAuthenticationFailed(true);
-                            alert("Maximum retries reached.");
-                        }
-                    }
+            if (result) {
+                setIsAuthenticated(true);
+            } else {
+                if (reloadCount > 0) {
+                    setIsAuthenticated(false);
+                    setReloadCount(prevCount => prevCount - 1);
+                } else {
+                    setAuthenticationFailed(true);
+                    alert("Maximum retries reached.");
                 }
-            }, 1000); // Countdown decreases every second
+            }
         } catch (error) {
             console.error("Error capturing and sending image:", error);
         }
@@ -117,7 +107,7 @@ const LiveFace = () => {
 
     const handleRetry = () => {
         setIsAuthenticated(null);
-        initializeVideoStream(); // Reinitialize the video stream when retrying
+        initializeVideoStream();
     };
 
     const getModelInference = async (face, digits) => {
@@ -184,14 +174,31 @@ const LiveFace = () => {
         }
     }, [currentPrompt, voiceEnabled]);
 
+    useEffect(() => {
+        if (timer <= 0) {
+            clearInterval(timerRef.current);
+            setIsAuthenticated(false);
+            console.log("Timer ran out. Retry available.");
+            if (reloadCount > 0) {
+                setReloadCount(prevCount => prevCount - 1);
+            } else {
+                setAuthenticationFailed(true);
+                alert("Maximum retries reached.");
+            }
+        }
+    }, [timer]);
+
+    const resetTimer = () => {
+        clearInterval(timerRef.current);
+        setTimer(30);
+        timerRef.current = setInterval(() => {
+            setTimer(prev => prev - 1);
+        }, 1000);
+    };
+
     return (
         <div>
-            {authenticationFailed ? (
-                <div>
-                    <h1>Authentication Failed</h1>
-                    <p>You have failed the authentication process. Please try again later.</p>
-                </div>
-            ) : showInstructions ? (
+            {showInstructions ? (
                 <Instructions onProceed={handleProceed} voiceEnabled={voiceEnabled} setVoiceEnabled={setVoiceEnabled} />
             ) : isAuthenticated === null ? (
                 <div id="root">
@@ -215,12 +222,10 @@ const LiveFace = () => {
                             <button onClick={handleClickPicture}>
                                 Click Picture
                             </button>
-                            {countdown !== null && (
-                                <div>
-                                    <p>Picture will be taken in: {countdown} seconds</p>
-                                    <p>You have {reloadCount} tries remaining</p>
-                                </div>
-                            )}
+                            <div>
+                                <p>Timer: {timer} seconds</p>
+                                <p>You have {reloadCount} tries remaining</p>
+                            </div>
                         </div>
                     </div>
                 </div>

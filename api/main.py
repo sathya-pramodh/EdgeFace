@@ -5,7 +5,7 @@ from PIL import Image
 
 from utils.segment_image import segment_image as seg_image
 
-app = Flask(__file__)
+app = Flask(__name__)
 CORS(app)
 
 
