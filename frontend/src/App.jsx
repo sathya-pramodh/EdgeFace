@@ -97,7 +97,7 @@ const LiveFace = () => {
                     setReloadCount(prevCount => prevCount - 1);
                 } else {
                     setAuthenticationFailed(true);
-                    alert("Maximum retries reached.");
+                    
                 }
             }
         } catch (error) {
@@ -183,7 +183,7 @@ const LiveFace = () => {
                 setReloadCount(prevCount => prevCount - 1);
             } else {
                 setAuthenticationFailed(true);
-                alert("Maximum retries reached.");
+                
             }
         }
     }, [timer]);
