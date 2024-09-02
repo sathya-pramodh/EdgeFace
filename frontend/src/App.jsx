@@ -141,7 +141,7 @@ const LiveFace = () => {
             console.log(`Predicted Digit: ${predictedDigit}`);
         }
 
-        return (coco_class === 'person' && coco_score > 0.8);
+        return (coco_class === 'person' && coco_score > 0.5);
     };
 
     const createImageFromBase64 = (base64String) => {
