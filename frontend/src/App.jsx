@@ -6,6 +6,7 @@ import * as tf from "@tensorflow/tfjs";
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs-backend-cpu';
 import Instructions from './inst.jsx';
+import shutterSound from './shutter.mp3'; // Import the shutter sound
 
 const LiveFace = () => {
     const videoRef = useRef(null);
@@ -39,7 +40,7 @@ const LiveFace = () => {
             });
             videoRef.current.srcObject = stream;
             mediaRecorderRef.current = new MediaRecorder(stream, {
-                mimeType: "video/webm",    
+                mimeType: "video/webm",
             });
             console.log("Generating prompt...");
             const [randomNumber] = await getRandomPrompts();
@@ -60,6 +61,9 @@ const LiveFace = () => {
             clearInterval(timerRef.current);
             resetTimer();
 
+            const shutterAudio = new Audio(shutterSound);
+            shutterAudio.play();
+
             console.log("Capturing image...");
 
             const canvas = document.createElement("canvas");
@@ -70,6 +74,11 @@ const LiveFace = () => {
 
             const context = canvas.getContext("2d");
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Add a quick flash animation
+            const videoContainer = document.querySelector(".video-container");
+            videoContainer.classList.add("flash");
+            setTimeout(() => videoContainer.classList.remove("flash"), 100); // Shortened animation time
 
             const imageDataURL = canvas.toDataURL("image/jpeg");
             const base64ImageData = imageDataURL.split(",")[1];
@@ -97,7 +106,6 @@ const LiveFace = () => {
                     setReloadCount(prevCount => prevCount - 1);
                 } else {
                     setAuthenticationFailed(true);
-                    
                 }
             }
         } catch (error) {
@@ -113,10 +121,11 @@ const LiveFace = () => {
     const getModelInference = async (face, digits) => {
         const model = await cocoSsd.load();
         const predictions = await model.detect(face);
-        let coco_class;
+        let coco_class, coco_score;
 
         if (predictions && predictions.length > 0) {
             coco_class = predictions[0].class;
+            coco_score = predictions[0].score;
         } else {
             coco_class = false;
         }
@@ -132,7 +141,7 @@ const LiveFace = () => {
             console.log(`Predicted Digit: ${predictedDigit}`);
         }
 
-        return coco_class === 'person';
+        return (coco_class === 'person' && coco_score > 0.8);
     };
 
     const createImageFromBase64 = (base64String) => {
@@ -183,7 +192,6 @@ const LiveFace = () => {
                 setReloadCount(prevCount => prevCount - 1);
             } else {
                 setAuthenticationFailed(true);
-                
             }
         }
     }, [timer]);
@@ -197,15 +205,13 @@ const LiveFace = () => {
     };
 
     return (
-        
         <div>
             {authenticationFailed ? (
                 <div>
                     <h1>Authentication Failed</h1>
                     <p>You have failed the authentication process. Please try again later.</p>
                 </div>
-
-            ):showInstructions ? (
+            ) : showInstructions ? (
                 <Instructions onProceed={handleProceed} voiceEnabled={voiceEnabled} setVoiceEnabled={setVoiceEnabled} />
             ) : isAuthenticated === null ? (
                 <div id="root">

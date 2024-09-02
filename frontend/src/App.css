@@ -189,3 +189,19 @@ p {
 {
   font-size: 0.5cm;
 }
+
+.flash {
+  animation: flashAnimation 0.1s ease-out;
+}
+
+@keyframes flashAnimation {
+  0% {
+      opacity: 1;
+  }
+  50% {
+      opacity: 0.3;
+  }
+  100% {
+      opacity: 1;
+  }
+}
