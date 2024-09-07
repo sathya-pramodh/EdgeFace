@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 import '@tensorflow/tfjs-backend-webgl';
@@ -6,7 +6,8 @@ import * as tf from "@tensorflow/tfjs";
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs-backend-cpu';
 import Instructions from './inst.jsx';
-import shutterSound from './shutter.mp3'; // Import the shutter sound
+import Suggestions from './sugg.jsx'; 
+import shutterSound from './shutter.mp3'; 
 
 const LiveFace = () => {
     const videoRef = useRef(null);
@@ -19,6 +20,7 @@ const LiveFace = () => {
     const [timer, setTimer] = useState(30);
     const timerRef = useRef(null);
     const [authenticationFailed, setAuthenticationFailed] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false); 
 
     const handleProceed = () => {
         setShowInstructions(false);
@@ -75,10 +77,10 @@ const LiveFace = () => {
             const context = canvas.getContext("2d");
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Add a quick flash animation
+          
             const videoContainer = document.querySelector(".video-container");
             videoContainer.classList.add("flash");
-            setTimeout(() => videoContainer.classList.remove("flash"), 100); // Shortened animation time
+            setTimeout(() => videoContainer.classList.remove("flash"), 100);
 
             const imageDataURL = canvas.toDataURL("image/jpeg");
             const base64ImageData = imageDataURL.split(",")[1];
@@ -115,6 +117,7 @@ const LiveFace = () => {
 
     const handleRetry = () => {
         setIsAuthenticated(null);
+        setShowSuggestions(false); 
         initializeVideoStream();
     };
 
@@ -204,12 +207,23 @@ const LiveFace = () => {
         }, 1000);
     };
 
+    const handleShowSuggestions = () => {
+        setShowSuggestions(true); 
+    };
+
+    const handleSuggestionsSubmit = (suggestion) => {
+        console.log("User Suggestion:", suggestion);
+    };
+
     return (
         <div>
-            {authenticationFailed ? (
+            { showSuggestions ? (
+                <Suggestions onSubmit={handleSuggestionsSubmit} />
+            ) : authenticationFailed ? (
                 <div>
                     <h1>Authentication Failed</h1>
                     <p>You have failed the authentication process. Please try again later.</p>
+                    <button onClick={handleShowSuggestions}>Click to give Feedback</button>
                 </div>
             ) : showInstructions ? (
                 <Instructions onProceed={handleProceed} voiceEnabled={voiceEnabled} setVoiceEnabled={setVoiceEnabled} />
@@ -249,6 +263,7 @@ const LiveFace = () => {
                         <img src="./img/auth.png" alt="Authentication Successful" className="auth-tick" />
                     </div>
                     <p className="msg">Thank you for using LiveFace!</p>
+                    <button onClick={handleShowSuggestions}>Click to give Feedback</button>
                 </div>
             ) : (
                 <div>
